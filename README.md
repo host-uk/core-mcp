@@ -1,138 +1,203 @@
-# Core PHP Framework Project
+# Core MCP Package
 
-[![CI](https://github.com/host-uk/core-template/actions/workflows/ci.yml/badge.svg)](https://github.com/host-uk/core-template/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/host-uk/core-template/graph/badge.svg)](https://codecov.io/gh/host-uk/core-template)
-[![PHP Version](https://img.shields.io/packagist/php-v/host-uk/core-template)](https://packagist.org/packages/host-uk/core-template)
-[![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?logo=laravel)](https://laravel.com)
-[![License](https://img.shields.io/badge/License-EUPL--1.2-blue.svg)](LICENSE)
-
-A modular monolith Laravel application built with Core PHP Framework.
-
-## Features
-
-- **Core Framework** - Event-driven module system with lazy loading
-- **Admin Panel** - Livewire-powered admin interface with Flux UI
-- **REST API** - Scoped API keys, rate limiting, webhooks, OpenAPI docs
-- **MCP Tools** - Model Context Protocol for AI agent integration
-
-## Requirements
-
-- PHP 8.2+
-- Composer 2.x
-- SQLite (default) or MySQL/PostgreSQL
-- Node.js 18+ (for frontend assets)
+Model Context Protocol (MCP) tools and analytics for AI-powered automation and integrations.
 
 ## Installation
 
 ```bash
-# Clone or create from template
-git clone https://github.com/host-uk/core-template.git my-project
-cd my-project
-
-# Install dependencies
-composer install
-npm install
-
-# Configure environment
-cp .env.example .env
-php artisan key:generate
-
-# Set up database
-touch database/database.sqlite
-php artisan migrate
-
-# Start development server
-php artisan serve
+composer require host-uk/core-mcp
 ```
 
-Visit: http://localhost:8000
+## Features
 
-## Project Structure
-
-```
-app/
-├── Console/      # Artisan commands
-├── Http/         # Controllers & Middleware
-├── Models/       # Eloquent models
-├── Mod/          # Your custom modules
-└── Providers/    # Service providers
-
-config/
-└── core.php      # Core framework configuration
-
-routes/
-├── web.php       # Public web routes
-├── api.php       # REST API routes
-└── console.php   # Artisan commands
-```
-
-## Creating Modules
-
-```bash
-# Create a new module with all features
-php artisan make:mod Blog --all
-
-# Create module with specific features
-php artisan make:mod Shop --web --api --admin
-```
-
-Modules follow the event-driven pattern:
+### MCP Tool Registry
+Extensible tool system for AI integrations:
 
 ```php
-<?php
+use Core\Mcp\Tools\BaseTool;
 
-namespace App\Mod\Blog;
-
-use Core\Events\WebRoutesRegistering;
-use Core\Events\ApiRoutesRegistering;
-use Core\Events\AdminPanelBooting;
-
-class Boot
+class GetProductsTool extends BaseTool
 {
-    public static array $listens = [
-        WebRoutesRegistering::class => 'onWebRoutes',
-        ApiRoutesRegistering::class => 'onApiRoutes',
-        AdminPanelBooting::class => 'onAdminPanel',
-    ];
-
-    public function onWebRoutes(WebRoutesRegistering $event): void
+    public function name(): string
     {
-        $event->routes(fn() => require __DIR__.'/Routes/web.php');
-        $event->views('blog', __DIR__.'/Views');
+        return 'get_products';
+    }
+
+    public function description(): string
+    {
+        return 'Retrieve a list of products from the workspace';
+    }
+
+    public function schema(JsonSchema $schema): array
+    {
+        return [
+            'limit' => $schema->integer('Maximum number of products to return'),
+        ];
+    }
+
+    public function handle(Request $request): Response
+    {
+        $products = Product::take($request->input('limit', 10))->get();
+        return Response::text(json_encode($products));
     }
 }
 ```
 
-## Core Packages
+### Workspace Context Security
+Prevents cross-tenant data leakage:
 
-| Package | Description |
-|---------|-------------|
-| `host-uk/core` | Core framework components |
-| `host-uk/core-admin` | Admin panel & Livewire modals |
-| `host-uk/core-api` | REST API with scopes & webhooks |
-| `host-uk/core-mcp` | Model Context Protocol tools |
+```php
+use Core\Mcp\Tools\Concerns\RequiresWorkspaceContext;
 
-## Flux Pro (Optional)
+class MyTool extends BaseTool
+{
+    use RequiresWorkspaceContext;
 
-This template uses the free Flux UI components. If you have a Flux Pro license:
-
-```bash
-# Configure authentication
-composer config http-basic.composer.fluxui.dev your-email your-license-key
-
-# Add the repository
-composer config repositories.flux-pro composer https://composer.fluxui.dev
-
-# Install Flux Pro
-composer require livewire/flux-pro
+    // Automatically validates workspace context
+    // Throws exception if context is missing
+}
 ```
 
-## Documentation
+### SQL Query Validation
+Multi-layer protection for database queries:
 
-- [Core PHP Framework](https://github.com/host-uk/core-php)
-- [Getting Started Guide](https://host-uk.github.io/core-php/guide/)
-- [Architecture](https://host-uk.github.io/core-php/architecture/)
+```php
+use Core\Mcp\Services\SqlQueryValidator;
+
+$validator = new SqlQueryValidator();
+$validator->validate($query); // Throws if unsafe
+
+// Features:
+// - Blocked keywords (INSERT, UPDATE, DELETE, DROP)
+// - Pattern detection (stacked queries, hex encoding)
+// - Whitelist matching
+// - Comment stripping
+```
+
+### Tool Analytics
+Track tool usage and performance:
+
+```php
+use Core\Mcp\Services\ToolAnalyticsService;
+
+$analytics = app(ToolAnalyticsService::class);
+
+$stats = $analytics->getToolStats('get_products');
+// Returns: calls, avg_duration, error_rate, etc.
+```
+
+**Admin dashboard:** `/admin/mcp/analytics`
+
+### Tool Dependencies
+Declare tool dependencies and validate at runtime:
+
+```php
+use Core\Mcp\Dependencies\{HasDependencies, ToolDependency};
+
+class AdvancedTool extends BaseTool implements HasDependencies
+{
+    public function dependencies(): array
+    {
+        return [
+            new ToolDependency('get_products', DependencyType::REQUIRED),
+            new ToolDependency('send_email', DependencyType::OPTIONAL),
+        ];
+    }
+}
+```
+
+### MCP Playground
+Interactive UI for testing tools:
+
+**Route:** `/admin/mcp/playground`
+
+**Features:**
+- Tool browser with search
+- Dynamic form generation
+- JSON response viewer
+- Conversation history
+- Example pre-fill
+
+### Query EXPLAIN Analysis
+Performance insights for database queries:
+
+```json
+{
+  "query": "SELECT * FROM users WHERE email = ?",
+  "explain": true
+}
+```
+
+**Returns:**
+- Raw EXPLAIN output
+- Performance warnings
+- Index usage analysis
+- Optimization recommendations
+
+### Usage Quotas
+Workspace-level rate limiting:
+
+```php
+use Core\Mcp\Services\McpQuotaService;
+
+$quota = app(McpQuotaService::class);
+
+// Check if workspace can execute tool
+if (!$quota->canExecute($workspace, 'expensive_tool')) {
+    throw new QuotaExceededException();
+}
+
+// Record execution
+$quota->recordExecution($workspace, 'expensive_tool');
+```
+
+## Configuration
+
+```php
+// config/mcp.php
+
+return [
+    'database' => [
+        'connection' => 'readonly', // Dedicated read-only connection
+        'use_whitelist' => true,
+        'blocked_tables' => ['users', 'api_keys'],
+    ],
+    'analytics' => [
+        'enabled' => true,
+        'retention_days' => 90,
+    ],
+    'quota' => [
+        'enabled' => true,
+        'default_limit' => 1000, // Per workspace per day
+    ],
+];
+```
+
+## Security
+
+### Query Security (Defense in Depth)
+1. **Read-only database user** (infrastructure)
+2. **Blocked keywords** (application)
+3. **Pattern validation** (application)
+4. **Whitelist matching** (application)
+5. **Table access controls** (application)
+
+### Workspace Isolation
+- Context MUST come from authentication
+- Cross-tenant access prevented by design
+- Tools throw exceptions without context
+
+See [changelog/2026/jan/security.md](changelog/2026/jan/security.md) for security updates.
+
+## Requirements
+
+- PHP 8.2+
+- Laravel 11+ or 12+
+
+## Changelog
+
+See [changelog/2026/jan/features.md](changelog/2026/jan/features.md) for recent changes.
 
 ## License
 
-EUPL-1.2 (European Union Public Licence)
+EUPL-1.2 - See [LICENSE](../../LICENSE) for details.
