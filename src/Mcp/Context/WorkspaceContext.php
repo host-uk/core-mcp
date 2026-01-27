@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Mod\Mcp\Context;
+namespace Core\Mcp\Context;
 
-use Core\Mod\Tenant\Models\Workspace;
-use Mod\Mcp\Exceptions\MissingWorkspaceContextException;
+use Core\Tenant\Models\Workspace;
+use Core\Mcp\Exceptions\MissingWorkspaceContextException;
 
 /**
  * Workspace context for MCP tool execution.

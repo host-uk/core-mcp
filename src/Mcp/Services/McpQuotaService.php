@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Core\Mcp\Services;
 
 use Core\Mcp\Models\McpUsageQuota;
-use Core\Mod\Tenant\Models\Workspace;
-use Core\Mod\Tenant\Services\EntitlementService;
+use Core\Tenant\Models\Workspace;
+use Core\Tenant\Services\EntitlementService;
 use Illuminate\Support\Facades\Cache;
 
 /**

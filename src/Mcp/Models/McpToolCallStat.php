@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Core\Mcp\Models;
 
-use Core\Mod\Tenant\Concerns\BelongsToWorkspace;
-use Core\Mod\Tenant\Models\Workspace;
+use Core\Tenant\Concerns\BelongsToWorkspace;
+use Core\Tenant\Models\Workspace;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

@@ -6,9 +6,9 @@ namespace Core\Mcp\Tests\Unit;
 
 use Core\Mcp\Models\McpUsageQuota;
 use Core\Mcp\Services\McpQuotaService;
-use Core\Mod\Tenant\Models\Workspace;
-use Core\Mod\Tenant\Services\EntitlementResult;
-use Core\Mod\Tenant\Services\EntitlementService;
+use Core\Tenant\Models\Workspace;
+use Core\Tenant\Services\EntitlementResult;
+use Core\Tenant\Services\EntitlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;

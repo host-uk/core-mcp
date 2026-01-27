@@ -7,8 +7,8 @@
  * Tests the primary admin flow through the API key manager.
  */
 
-use Core\Mod\Tenant\Models\User;
-use Core\Mod\Tenant\Models\Workspace;
+use Core\Tenant\Models\User;
+use Core\Tenant\Models\Workspace;
 
 describe('MCP API Key Manager', function () {
     beforeEach(function () {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Core\Mcp\View\Modal\Admin;
 
 use Core\Mod\Api\Models\ApiKey;
-use Core\Mod\Tenant\Models\Workspace;
+use Core\Tenant\Models\Workspace;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 

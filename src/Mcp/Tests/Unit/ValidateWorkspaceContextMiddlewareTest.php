@@ -8,8 +8,8 @@ declare(strict_types=1);
  * Tests for the MCP workspace context validation middleware.
  */
 
-use Core\Mod\Tenant\Models\User;
-use Core\Mod\Tenant\Models\Workspace;
+use Core\Tenant\Models\User;
+use Core\Tenant\Models\Workspace;
 use Illuminate\Http\Request;
 use Mod\Mcp\Context\WorkspaceContext;
 use Mod\Mcp\Middleware\ValidateWorkspaceContext;

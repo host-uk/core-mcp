@@ -10,9 +10,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Mod\Api\Models\ApiKey;
-use Mod\Mcp\Models\McpApiRequest;
-use Mod\Mcp\Models\McpToolCall;
-use Mod\Mcp\Services\McpWebhookDispatcher;
+use Core\Mcp\Models\McpApiRequest;
+use Core\Mcp\Models\McpToolCall;
+use Core\Mcp\Services\McpWebhookDispatcher;
 use Symfony\Component\Yaml\Yaml;
 
 /**

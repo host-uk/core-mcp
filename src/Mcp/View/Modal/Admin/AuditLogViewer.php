@@ -6,7 +6,7 @@ namespace Core\Mcp\View\Modal\Admin;
 
 use Core\Mcp\Models\McpAuditLog;
 use Core\Mcp\Services\AuditLogService;
-use Core\Mod\Tenant\Models\Workspace;
+use Core\Tenant\Models\Workspace;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;

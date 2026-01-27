@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Core\Mcp\View\Modal\Admin;
 
 use Core\Mcp\Services\McpQuotaService;
-use Core\Mod\Tenant\Models\Workspace;
+use Core\Tenant\Models\Workspace;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 

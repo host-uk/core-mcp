@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Mod\Mcp\Exceptions;
+namespace Core\Mcp\Exceptions;
 
 use RuntimeException;
 

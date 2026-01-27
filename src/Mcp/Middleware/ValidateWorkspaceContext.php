@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Mod\Mcp\Middleware;
+namespace Core\Mcp\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Mod\Mcp\Context\WorkspaceContext;
-use Mod\Mcp\Exceptions\MissingWorkspaceContextException;
+use Core\Mcp\Context\WorkspaceContext;
+use Core\Mcp\Exceptions\MissingWorkspaceContextException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**

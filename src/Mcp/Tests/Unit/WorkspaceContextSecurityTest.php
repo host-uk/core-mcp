@@ -8,8 +8,8 @@ declare(strict_types=1);
  * Tests for MCP workspace context security to prevent cross-tenant data leakage.
  */
 
-use Core\Mod\Tenant\Models\User;
-use Core\Mod\Tenant\Models\Workspace;
+use Core\Tenant\Models\User;
+use Core\Tenant\Models\Workspace;
 use Mod\Mcp\Context\WorkspaceContext;
 use Mod\Mcp\Exceptions\MissingWorkspaceContextException;
 use Mod\Mcp\Tools\Concerns\RequiresWorkspaceContext;

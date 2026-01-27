@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Core\Mcp\Middleware;
 
-use Core\Mod\Tenant\Models\Workspace;
-use Core\Mod\Tenant\Services\EntitlementService;
+use Core\Tenant\Models\Workspace;
+use Core\Tenant\Services\EntitlementService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

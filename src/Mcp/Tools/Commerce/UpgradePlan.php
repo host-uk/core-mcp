@@ -6,7 +6,7 @@ namespace Core\Mcp\Tools\Commerce;
 
 use Core\Mod\Commerce\Models\Subscription;
 use Core\Mod\Commerce\Services\SubscriptionService;
-use Core\Mod\Tenant\Models\Package;
+use Core\Tenant\Models\Package;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
