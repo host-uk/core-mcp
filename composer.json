@@ -9,13 +9,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Core\\Mod\\Mcp\\": "src/Mod/Mcp/",
+            "Core\\Mcp\\": "src/Mcp/",
             "Core\\Website\\Mcp\\": "src/Website/Mcp/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Core\\Mod\\Mcp\\Tests\\": "tests/"
+            "Core\\Mcp\\Tests\\": "tests/"
         }
     },
     "extra": {

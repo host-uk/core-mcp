@@ -6,7 +6,7 @@ namespace Core\Website\Mcp\View\Modal;
 
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Core\Mod\Mcp\Services\McpMetricsService;
+use Core\Mcp\Services\McpMetricsService;
 
 /**
  * MCP Metrics Dashboard

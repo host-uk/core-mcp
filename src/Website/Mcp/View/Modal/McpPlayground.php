@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Core\Mod\Mcp\Models\McpToolCall;
+use Core\Mcp\Models\McpToolCall;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
 

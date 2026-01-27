@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Core\Website\Mcp\View\Modal;
+namespace Core\Mcp\View\Modal\Admin;
 
+use Core\Mcp\Models\McpApiRequest;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Core\Mcp\Models\McpApiRequest;
 
 /**
  * MCP Request Log - view and replay API requests.
  */
-#[Layout('components.layouts.mcp')]
+#[Layout('hub::admin.layouts.app')]
 class RequestLog extends Component
 {
     use WithPagination;
@@ -37,22 +37,8 @@ class RequestLog extends Component
 
     public function selectRequest(int $id): void
     {
-        $workspace = auth()->user()?->defaultHostWorkspace();
-
-        // Only allow selecting requests that belong to the user's workspace
-        $request = McpApiRequest::query()
-            ->when($workspace, fn ($q) => $q->forWorkspace($workspace->id))
-            ->find($id);
-
-        if (! $request) {
-            $this->selectedRequestId = null;
-            $this->selectedRequest = null;
-
-            return;
-        }
-
         $this->selectedRequestId = $id;
-        $this->selectedRequest = $request;
+        $this->selectedRequest = McpApiRequest::find($id);
     }
 
     public function closeDetail(): void
@@ -92,7 +78,7 @@ class RequestLog extends Component
             ->filter()
             ->values();
 
-        return view('mcp::web.request-log', [
+        return view('mcp::admin.request-log', [
             'requests' => $requests,
             'servers' => $servers,
         ]);
