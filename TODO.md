@@ -13,13 +13,14 @@
   - **Completed:** 29 January 2026
   - **File:** `tests/Unit/SqlQueryValidatorTest.php`
 
-- [ ] **Test Coverage: Workspace Context** - Test isolation and validation
-  - [ ] Test WorkspaceContext resolution from headers
-  - [ ] Test automatic workspace scoping in queries
-  - [ ] Test MissingWorkspaceContextException
-  - [ ] Test workspace boundary enforcement
-  - [ ] Test cross-workspace query prevention
-  - **Estimated effort:** 3-4 hours
+- [x] **Test Coverage: Workspace Context** - Test isolation and validation
+  - [x] Test WorkspaceContext resolution from headers
+  - [x] Test automatic workspace scoping in queries
+  - [x] Test MissingWorkspaceContextException
+  - [x] Test workspace boundary enforcement
+  - [x] Test cross-workspace query prevention
+  - **Completed:** 29 January 2026
+  - **File:** `src/Mcp/Tests/Unit/WorkspaceContextSecurityTest.php`
 
 - [ ] **Test Coverage: Tool Analytics** - Test metrics tracking
   - [ ] Test ToolAnalyticsService recording
@@ -297,6 +298,7 @@
 
 ## Completed (January 2026)
 
+- [x] **Test Coverage: Workspace Context** - Comprehensive Pest tests for workspace isolation and context injection (P2-014)
 - [x] **Test Coverage: SQL Query Validator** - Comprehensive Pest tests for SQL injection prevention (P2-013)
 - [x] **Security: Database Connection Validation** - Throws exception for invalid connections
 - [x] **Security: SQL Validator Strengthening** - Stricter WHERE clause patterns

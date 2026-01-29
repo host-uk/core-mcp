@@ -26,7 +26,7 @@ use Tests\TestCase;
 |
 */
 
-uses(TestCase::class)->in('Feature', 'Unit');
+uses(TestCase::class)->in('Feature', 'Unit', '../src/Mcp/Tests/Unit');
 
 /*
 |--------------------------------------------------------------------------
@@ -38,4 +38,4 @@ uses(TestCase::class)->in('Feature', 'Unit');
 |
 */
 
-uses(RefreshDatabase::class)->in('Feature');
+uses(RefreshDatabase::class)->in('Feature', '../src/Mcp/Tests/Unit');
