@@ -32,13 +32,15 @@
   - **Completed:** 29 January 2026
   - **File:** `src/Mcp/Tests/Unit/ToolAnalyticsServiceTest.php`
 
-- [ ] **Test Coverage: Quota System** - Test limits and enforcement
-  - [ ] Test McpQuotaService tier limits
-  - [ ] Test quota exceeded detection
-  - [ ] Test quota reset timing
-  - [ ] Test workspace-scoped quotas
-  - [ ] Test custom quota overrides
-  - **Estimated effort:** 3-4 hours
+- [x] **Test Coverage: Quota System** - Test limits and enforcement
+  - [x] Test McpQuotaService tier limits (free, starter, pro, business, enterprise)
+  - [x] Test quota exceeded detection
+  - [x] Test quota reset timing
+  - [x] Test workspace-scoped quotas
+  - [x] Test CheckMcpQuota middleware (429 responses, headers)
+  - [x] Test edge cases (concurrent requests, cache invalidation, month boundaries)
+  - **Completed:** 29 January 2026
+  - **File:** `src/Mcp/Tests/Unit/McpQuotaServiceTest.php`
 
 ### Medium Priority
 
