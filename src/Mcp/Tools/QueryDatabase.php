@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Core\Mcp\Tools;
 
 use Core\Mcp\Exceptions\ForbiddenQueryException;
+use Core\Mcp\Exceptions\QueryTimeoutException;
+use Core\Mcp\Services\QueryAuditService;
+use Core\Mcp\Services\QueryExecutionService;
 use Core\Mcp\Services\SqlQueryValidator;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Config;
@@ -21,7 +24,9 @@ use Laravel\Mcp\Server\Tool;
  * 2. Validates queries against blocked keywords and patterns
  * 3. Optional whitelist-based query validation
  * 4. Blocks access to sensitive tables
- * 5. Enforces row limits
+ * 5. Enforces tier-based row limits with truncation warnings
+ * 6. Enforces per-query timeout limits
+ * 7. Comprehensive audit logging of all query attempts
  */
 class QueryDatabase extends Tool
 {
@@ -29,9 +34,17 @@ class QueryDatabase extends Tool
 
     private SqlQueryValidator $validator;
 
-    public function __construct()
-    {
+    private QueryExecutionService $executionService;
+
+    private QueryAuditService $auditService;
+
+    public function __construct(
+        ?QueryExecutionService $executionService = null,
+        ?QueryAuditService $auditService = null
+    ) {
         $this->validator = $this->createValidator();
+        $this->auditService = $auditService ?? app(QueryAuditService::class);
+        $this->executionService = $executionService ?? app(QueryExecutionService::class);
     }
 
     public function handle(Request $request): Response
@@ -39,39 +52,89 @@ class QueryDatabase extends Tool
         $query = $request->input('query');
         $explain = $request->input('explain', false);
 
+        // Extract context from request for audit logging
+        $workspaceId = $this->getWorkspaceId($request);
+        $userId = $this->getUserId($request);
+        $userIp = $this->getUserIp($request);
+        $sessionId = $request->input('session_id');
+
         if (empty($query)) {
             return $this->errorResponse('Query is required');
         }
 
-        // Validate the query
+        // Validate the query - log blocked queries
         try {
             $this->validator->validate($query);
         } catch (ForbiddenQueryException $e) {
+            $this->auditService->recordBlocked(
+                query: $query,
+                bindings: [],
+                reason: $e->reason,
+                workspaceId: $workspaceId,
+                userId: $userId,
+                userIp: $userIp,
+                context: ['session_id' => $sessionId]
+            );
+
             return $this->errorResponse($e->getMessage());
         }
 
         // Check for blocked tables
         $blockedTable = $this->checkBlockedTables($query);
         if ($blockedTable !== null) {
+            $this->auditService->recordBlocked(
+                query: $query,
+                bindings: [],
+                reason: "Access to blocked table: {$blockedTable}",
+                workspaceId: $workspaceId,
+                userId: $userId,
+                userIp: $userIp,
+                context: ['session_id' => $sessionId, 'blocked_table' => $blockedTable]
+            );
+
             return $this->errorResponse(
                 sprintf("Access to table '%s' is not permitted", $blockedTable)
             );
         }
-
-        // Apply row limit if not present
-        $query = $this->applyRowLimit($query);
 
         try {
             $connection = $this->getConnection();
 
             // If explain is requested, run EXPLAIN first
             if ($explain) {
-                return $this->handleExplain($connection, $query);
+                return $this->handleExplain($connection, $query, $workspaceId, $userId, $userIp, $sessionId);
             }
 
-            $results = DB::connection($connection)->select($query);
+            // Execute query with tier-based limits, timeout, and audit logging
+            $result = $this->executionService->execute(
+                query: $query,
+                connection: $connection,
+                workspaceId: $workspaceId,
+                userId: $userId,
+                userIp: $userIp,
+                context: [
+                    'session_id' => $sessionId,
+                    'explain_requested' => false,
+                ]
+            );
 
-            return Response::text(json_encode($results, JSON_PRETTY_PRINT));
+            // Build response with data and metadata
+            $response = [
+                'data' => $result['data'],
+                'meta' => $result['meta'],
+            ];
+
+            // Add warning if results were truncated
+            if ($result['meta']['truncated']) {
+                $response['warning'] = $result['meta']['warning'];
+            }
+
+            return Response::text(json_encode($response, JSON_PRETTY_PRINT));
+        } catch (QueryTimeoutException $e) {
+            return $this->errorResponse(
+                'Query timed out: '.$e->getMessage().
+                ' Consider adding more specific filters or indexes.'
+            );
         } catch (\Exception $e) {
             // Log the actual error for debugging but return sanitised message
             report($e);
@@ -84,7 +147,7 @@ class QueryDatabase extends Tool
     {
         return [
             'query' => $schema->string('SQL SELECT query to execute. Only read-only SELECT queries are permitted.'),
-            'explain' => $schema->boolean('If true, runs EXPLAIN on the query instead of executing it. Useful for query optimization and debugging.')->default(false),
+            'explain' => $schema->boolean('If true, runs EXPLAIN on the query instead of executing it. Useful for query optimisation and debugging.')->default(false),
         ];
     }
 
@@ -151,21 +214,60 @@ class QueryDatabase extends Tool
     }
 
     /**
-     * Apply row limit to query if not already present.
+     * Extract workspace ID from request context.
      */
-    private function applyRowLimit(string $query): string
+    private function getWorkspaceId(Request $request): ?int
     {
-        $maxRows = Config::get('mcp.database.max_rows', 1000);
-
-        // Check if LIMIT is already present
-        if (preg_match('/\bLIMIT\s+\d+/i', $query)) {
-            return $query;
+        // Try to get from request context or metadata
+        $workspaceId = $request->input('workspace_id');
+        if ($workspaceId !== null) {
+            return (int) $workspaceId;
         }
 
-        // Remove trailing semicolon if present
-        $query = rtrim(trim($query), ';');
+        // Try from auth context
+        if (function_exists('workspace') && workspace()) {
+            return workspace()->id;
+        }
 
-        return $query.' LIMIT '.$maxRows;
+        return null;
+    }
+
+    /**
+     * Extract user ID from request context.
+     */
+    private function getUserId(Request $request): ?int
+    {
+        // Try to get from request context
+        $userId = $request->input('user_id');
+        if ($userId !== null) {
+            return (int) $userId;
+        }
+
+        // Try from auth
+        if (auth()->check()) {
+            return auth()->id();
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract user IP from request context.
+     */
+    private function getUserIp(Request $request): ?string
+    {
+        // Try from request metadata
+        $ip = $request->input('user_ip');
+        if ($ip !== null) {
+            return $ip;
+        }
+
+        // Try from HTTP request
+        if (request()) {
+            return request()->ip();
+        }
+
+        return null;
     }
 
     /**
@@ -188,11 +290,20 @@ class QueryDatabase extends Tool
     /**
      * Handle EXPLAIN query execution.
      */
-    private function handleExplain(?string $connection, string $query): Response
-    {
+    private function handleExplain(
+        ?string $connection,
+        string $query,
+        ?int $workspaceId = null,
+        ?int $userId = null,
+        ?string $userIp = null,
+        ?string $sessionId = null
+    ): Response {
+        $startTime = microtime(true);
+
         try {
             // Run EXPLAIN on the query
             $explainResults = DB::connection($connection)->select("EXPLAIN {$query}");
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
 
             // Also try to get extended information if MySQL/MariaDB
             $warnings = [];
@@ -214,8 +325,33 @@ class QueryDatabase extends Tool
             // Add helpful interpretation
             $response['interpretation'] = $this->interpretExplain($explainResults);
 
+            // Log the EXPLAIN query
+            $this->auditService->recordSuccess(
+                query: "EXPLAIN {$query}",
+                bindings: [],
+                durationMs: $durationMs,
+                rowCount: count($explainResults),
+                workspaceId: $workspaceId,
+                userId: $userId,
+                userIp: $userIp,
+                context: ['session_id' => $sessionId, 'explain_requested' => true]
+            );
+
             return Response::text(json_encode($response, JSON_PRETTY_PRINT));
         } catch (\Exception $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+
+            $this->auditService->recordError(
+                query: "EXPLAIN {$query}",
+                bindings: [],
+                errorMessage: $e->getMessage(),
+                durationMs: $durationMs,
+                workspaceId: $workspaceId,
+                userId: $userId,
+                userIp: $userIp,
+                context: ['session_id' => $sessionId, 'explain_requested' => true]
+            );
+
             report($e);
 
             return $this->errorResponse('EXPLAIN failed: '.$this->sanitiseErrorMessage($e->getMessage()));

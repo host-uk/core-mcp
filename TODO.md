@@ -79,26 +79,30 @@
 
 ### Medium Priority - Additional Security
 
-- [ ] **Security: Query Result Size Limits** - Prevent data exfiltration
-  - [ ] Add max_rows configuration per tier
-  - [ ] Enforce result set limits
-  - [ ] Return truncation warnings
-  - [ ] Test with large result sets
-  - **Estimated effort:** 2-3 hours
+- [x] **COMPLETED: Query Result Size Limits** - Prevent data exfiltration
+  - [x] Add max_rows configuration per tier (free: 100, starter: 500, professional: 1000, enterprise: 5000, unlimited: 10000)
+  - [x] Enforce result set limits via QueryExecutionService
+  - [x] Return truncation warnings in response metadata
+  - [x] Tests in QueryExecutionServiceTest.php
+  - **Completed:** 29 January 2026
+  - **Files:** `src/Mcp/Services/QueryExecutionService.php`, `src/Mcp/Exceptions/ResultSizeLimitException.php`
 
-- [ ] **Security: Query Timeout Enforcement** - Prevent resource exhaustion
-  - [ ] Add per-query timeout configuration
-  - [ ] Kill long-running queries
-  - [ ] Log slow query attempts
-  - [ ] Test with expensive queries
-  - **Estimated effort:** 2-3 hours
+- [x] **COMPLETED: Query Timeout Enforcement** - Prevent resource exhaustion
+  - [x] Add per-query timeout configuration per tier (free: 5s, starter: 10s, professional: 30s, enterprise: 60s, unlimited: 120s)
+  - [x] Database-specific timeout application (MySQL/MariaDB, PostgreSQL, SQLite)
+  - [x] Throw QueryTimeoutException on timeout
+  - [x] Log timeout attempts via QueryAuditService
+  - **Completed:** 29 January 2026
+  - **Files:** `src/Mcp/Services/QueryExecutionService.php`, `src/Mcp/Exceptions/QueryTimeoutException.php`
 
-- [ ] **Security: Audit Logging** - Complete query audit trail
-  - [ ] Log all query attempts (success and failure)
-  - [ ] Include user, workspace, query, and bindings
-  - [ ] Add tamper-proof logging
-  - [ ] Implement log retention policy
-  - **Estimated effort:** 3-4 hours
+- [x] **COMPLETED: Audit Logging for Queries** - Complete query audit trail
+  - [x] Log all query attempts (success, blocked, timeout, error, truncated)
+  - [x] Include user, workspace, query, bindings count, duration, row count
+  - [x] Sanitise queries and error messages for security
+  - [x] Security channel logging for blocked queries
+  - [x] Session and tier context tracking
+  - **Completed:** 29 January 2026
+  - **Files:** `src/Mcp/Services/QueryAuditService.php`, `src/Mcp/Tests/Unit/QueryAuditServiceTest.php`
 
 ## Features & Enhancements
 
@@ -294,6 +298,9 @@
 
 - [x] **Security: Database Connection Validation** - Throws exception for invalid connections
 - [x] **Security: SQL Validator Strengthening** - Stricter WHERE clause patterns
+- [x] **Security: Query Result Size Limits** - Tier-based max_rows with truncation warnings (P1-007)
+- [x] **Security: Query Timeout Enforcement** - Per-query timeout with database-specific implementation (P1-008)
+- [x] **Security: Audit Logging for Queries** - Comprehensive logging of all query attempts (P1-009)
 - [x] **Feature: EXPLAIN Plan Analysis** - Query optimization insights
 - [x] **Tool Analytics System** - Complete usage tracking and metrics
 - [x] **Quota System** - Tier-based limits with enforcement

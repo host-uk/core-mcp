@@ -11,6 +11,8 @@ use Core\Mcp\Events\ToolExecuted;
 use Core\Mcp\Listeners\RecordToolExecution;
 use Core\Mcp\Services\AuditLogService;
 use Core\Mcp\Services\McpQuotaService;
+use Core\Mcp\Services\QueryAuditService;
+use Core\Mcp\Services\QueryExecutionService;
 use Core\Mcp\Services\ToolAnalyticsService;
 use Core\Mcp\Services\ToolDependencyService;
 use Core\Mcp\Services\ToolRegistry;
@@ -47,6 +49,8 @@ class Boot extends ServiceProvider
         $this->app->singleton(ToolDependencyService::class);
         $this->app->singleton(AuditLogService::class);
         $this->app->singleton(ToolVersionService::class);
+        $this->app->singleton(QueryAuditService::class);
+        $this->app->singleton(QueryExecutionService::class);
     }
 
     /**
