@@ -22,13 +22,15 @@
   - **Completed:** 29 January 2026
   - **File:** `src/Mcp/Tests/Unit/WorkspaceContextSecurityTest.php`
 
-- [ ] **Test Coverage: Tool Analytics** - Test metrics tracking
-  - [ ] Test ToolAnalyticsService recording
-  - [ ] Test ToolStats DTO calculations
-  - [ ] Test performance percentiles (P95, P99)
-  - [ ] Test error rate calculations
-  - [ ] Test daily trend aggregation
-  - **Estimated effort:** 3-4 hours
+- [x] **Test Coverage: Tool Analytics** - Test metrics tracking
+  - [x] Test ToolAnalyticsService recording
+  - [x] Test ToolStats DTO calculations
+  - [x] Test error rate calculations
+  - [x] Test daily trend aggregation
+  - [x] Test reporting functions (popular tools, error-prone tools, workspace stats)
+  - [x] Test tool combination tracking
+  - **Completed:** 29 January 2026
+  - **File:** `src/Mcp/Tests/Unit/ToolAnalyticsServiceTest.php`
 
 - [ ] **Test Coverage: Quota System** - Test limits and enforcement
   - [ ] Test McpQuotaService tier limits
