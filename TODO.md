@@ -4,13 +4,14 @@
 
 ### High Priority
 
-- [ ] **Test Coverage: SQL Query Validator** - Test injection prevention
-  - [ ] Test all forbidden SQL keywords (DROP, INSERT, UPDATE, DELETE, etc.)
-  - [ ] Test SQL injection attempts (UNION, boolean blinds, etc.)
-  - [ ] Test parameterized query validation
-  - [ ] Test subquery restrictions
-  - [ ] Test multi-statement detection
-  - **Estimated effort:** 4-5 hours
+- [x] **Test Coverage: SQL Query Validator** - Test injection prevention
+  - [x] Test all forbidden SQL keywords (DROP, INSERT, UPDATE, DELETE, etc.)
+  - [x] Test SQL injection attempts (UNION, boolean blinds, etc.)
+  - [x] Test parameterized query validation
+  - [x] Test subquery restrictions
+  - [x] Test multi-statement detection
+  - **Completed:** 29 January 2026
+  - **File:** `tests/Unit/SqlQueryValidatorTest.php`
 
 - [ ] **Test Coverage: Workspace Context** - Test isolation and validation
   - [ ] Test WorkspaceContext resolution from headers
@@ -296,6 +297,7 @@
 
 ## Completed (January 2026)
 
+- [x] **Test Coverage: SQL Query Validator** - Comprehensive Pest tests for SQL injection prevention (P2-013)
 - [x] **Security: Database Connection Validation** - Throws exception for invalid connections
 - [x] **Security: SQL Validator Strengthening** - Stricter WHERE clause patterns
 - [x] **Security: Query Result Size Limits** - Tier-based max_rows with truncation warnings (P1-007)
