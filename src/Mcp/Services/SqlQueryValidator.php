@@ -13,6 +13,12 @@ use Core\Mcp\Exceptions\ForbiddenQueryException;
  * 1. Keyword blocking - Prevents dangerous SQL operations
  * 2. Structure validation - Detects injection patterns
  * 3. Whitelist matching - Only allows known-safe query patterns
+ *
+ * Security Trade-offs:
+ * - The validator is designed to be restrictive by default.
+ * - Subqueries are completely blocked to prevent complex data leakage attacks.
+ * - JOINs are allowed only with table names, not with subqueries.
+ * - WHERE/HAVING clauses are validated with regex, which may block complex but legitimate expressions.
  */
 class SqlQueryValidator
 {
@@ -77,8 +83,17 @@ class SqlQueryValidator
         '/\bmysql\./i',
         '/\bperformance_schema\./i',
         '/\bsys\./i',
-        // Subquery in WHERE that could leak data
-        '/WHERE\s+.*\(\s*SELECT/i',
+        // Dangerous functions
+        '/\bUSER\s*\(/i',
+        '/\bDATABASE\s*\(/i',
+        '/\bVERSION\s*\(/i',
+        '/\bCONNECTION_ID\s*\(/i',
+        '/\bSESSION_USER\s*\(/i',
+        '/\bSYSTEM_USER\s*\(/i',
+        '/\bCURRENT_USER\s*\(/i',
+        '/@@/',
+        // Subqueries anywhere (potential for data leakage or performance issues)
+        '/\(\s*SELECT/i',
         // Comment obfuscation attempts (inline comments between keywords)
         '/\/\*[^*]*\*\/\s*(?:UNION|SELECT|INSERT|UPDATE|DELETE|DROP)/i',
     ];
@@ -87,7 +102,7 @@ class SqlQueryValidator
      * Default whitelist patterns for safe queries.
      * These are regex patterns that match allowed query structures.
      *
-     * WHERE clause restrictions:
+     * WHERE/HAVING clause restrictions:
      * - Only allows column = value, column != value, column > value, etc.
      * - Supports AND/OR logical operators
      * - Allows LIKE, IN, BETWEEN, IS NULL/NOT NULL operators
@@ -95,12 +110,10 @@ class SqlQueryValidator
      * - No function calls except common safe ones
      */
     private const DEFAULT_WHITELIST = [
-        // Simple SELECT from single table with optional WHERE
-        '/^\s*SELECT\s+[\w\s,.*`]+\s+FROM\s+`?\w+`?(\s+WHERE\s+[\w\s`.,!=<>\'"%()]+(\s+(AND|OR)\s+[\w\s`.,!=<>\'"%()]+)*)?(\s+ORDER\s+BY\s+[\w\s,`]+(\s+(ASC|DESC))?)?(\s+LIMIT\s+\d+(\s*,\s*\d+)?)?;?\s*$/i',
-        // COUNT queries
-        '/^\s*SELECT\s+COUNT\s*\(\s*\*?\s*\)\s+FROM\s+`?\w+`?(\s+WHERE\s+[\w\s`.,!=<>\'"%()]+(\s+(AND|OR)\s+[\w\s`.,!=<>\'"%()]+)*)?;?\s*$/i',
-        // SELECT with explicit column list
-        '/^\s*SELECT\s+`?\w+`?(\s*,\s*`?\w+`?)*\s+FROM\s+`?\w+`?(\s+WHERE\s+[\w\s`.,!=<>\'"%()]+(\s+(AND|OR)\s+[\w\s`.,!=<>\'"%()]+)*)?(\s+ORDER\s+BY\s+[\w\s,`]+)?(\s+LIMIT\s+\d+)?;?\s*$/i',
+        // Structured SELECT query with support for JOIN, WHERE, GROUP BY, HAVING, ORDER BY, and LIMIT.
+        // Uses simplified groups to avoid catastrophic backtracking (ReDoS).
+        // Security is primarily enforced via character restrictions and dangerous pattern blacklisting.
+        '/^\s*SELECT\s+[\w\s,.*`()!"\'\-]+\s+FROM\s+`?\w+`?(?:\s+AS\s+`?\w+`?)?(?:\s*,\s*`?\w+`?(?:\s+AS\s+`?\w+`?)?)*(?:\s+(?:(?:LEFT|RIGHT|INNER|CROSS)\s+)?JOIN\s+`?\w+`?(?:\s+AS\s+`?\w+`?)?(?:\s+(?:ON\s+[\w\s`.,*!=<>\'"%()!\- ]+|USING\s*\(\s*`?\w+`?\s*\)))?)*(?:\s+WHERE\s+[\w\s`.,*!=<>\'"%()!\- ]+)?(?:\s+GROUP\s+BY\s+[\w\s,`.]+)?(?:\s+HAVING\s+[\w\s`.,*!=<>\'"%()!\- ]+)?(?:\s+ORDER\s+BY\s+[\w\s,`.]+(?:\s+(?:ASC|DESC))?)?(?:\s+LIMIT\s+\d+(?:\s*,\s*\d+)?)?;?\s*$/i',
     ];
 
     private array $whitelist;
@@ -128,6 +141,10 @@ class SqlQueryValidator
 
         // Now normalise and continue validation
         $query = $this->normaliseQuery($query);
+
+        // Check dangerous patterns AGAIN after normalization
+        // This catches things that were hidden by comments or whitespace
+        $this->checkDangerousPatterns($query);
 
         $this->checkBlockedKeywords($query);
         $this->checkQueryStructure($query);
