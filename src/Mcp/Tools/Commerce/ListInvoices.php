@@ -9,7 +9,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Core\Mcp\Tools\Concerns\RequiresWorkspaceContext;
+use Mod\Mcp\Tools\Concerns\RequiresWorkspaceContext;
 
 /**
  * List invoices for the authenticated workspace.
