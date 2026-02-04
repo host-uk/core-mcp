@@ -43,6 +43,8 @@ class Boot extends ServiceProvider
      */
     public function register(): void
     {
+        $this->mergeConfigFrom(__DIR__.'/../../config/mcp.php', 'mcp');
+
         $this->app->singleton(ToolRegistry::class);
         $this->app->singleton(ToolAnalyticsService::class);
         $this->app->singleton(McpQuotaService::class);
@@ -60,8 +62,62 @@ class Boot extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/Migrations');
 
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../../config/mcp.php' => config_path('mcp.php'),
+            ], 'mcp-config');
+        }
+
         // Register event listener for tool execution analytics
         Event::listen(ToolExecuted::class, RecordToolExecution::class);
+
+        // Validate security-critical configuration
+        $this->validateConfig();
+    }
+
+    /**
+     * Validate security-critical MCP configuration.
+     */
+    protected function validateConfig(): void
+    {
+        // Only validate if not running in console (e.g., web requests)
+        // or if explicitly running an MCP command
+        $argv = $_SERVER['argv'] ?? [];
+        $isMcpCommand = false;
+        foreach ($argv as $arg) {
+            if (str_contains($arg, 'mcp:')) {
+                $isMcpCommand = true;
+                break;
+            }
+        }
+
+        if ($this->app->runningInConsole() && ! $isMcpCommand) {
+            return;
+        }
+
+        // 1. Database Connection Security
+        $connection = config('mcp.database.connection');
+        if ($this->app->environment('production') && empty($connection)) {
+            \Illuminate\Support\Facades\Log::warning(
+                'MCP: No dedicated database connection configured. ' .
+                'Using the default connection in production is a security risk.'
+            );
+        }
+
+        // 2. Audit Logging
+        $channel = config('mcp.audit.log_channel');
+        if (! empty($channel) && $channel !== 'mcp-queries' && ! config("logging.channels.{$channel}")) {
+            \Illuminate\Support\Facades\Log::error(
+                "MCP: Configured audit log channel '{$channel}' does not exist in logging configuration."
+            );
+        }
+
+        // 3. SQL Whitelist
+        if (! config('mcp.database.use_whitelist', true)) {
+            \Illuminate\Support\Facades\Log::notice(
+                'MCP: SQL whitelist validation is disabled. This reduces the protection against unauthorized queries.'
+            );
+        }
     }
 
     // -------------------------------------------------------------------------
