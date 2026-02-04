@@ -13,6 +13,17 @@
             "url": "https://github.com/host-uk/core-php.git"
         }
     ],
+    "require-dev": {
+        "laravel/pint": "^1.18",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "orchestra/testbench": "^9.0|^10.0",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "phpunit/phpunit": "^11.5",
+        "phpstan/phpstan": "^2.1",
+        "vimeo/psalm": "^6.14"
+    },
     "autoload": {
         "psr-4": {
             "Core\\Mcp\\": "src/Mcp/",
