@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core\Mcp\Resources;
 
 use Core\Mod\Content\Models\ContentItem;
@@ -22,7 +24,7 @@ class ContentResource extends Resource
 
     public function handle(Request $request): Response
     {
-        $uri = $request->get('uri', '');
+        $uri = $request->input('uri', '');
 
         // Parse URI: content://{workspace}/{slug}
         if (! str_starts_with($uri, 'content://')) {

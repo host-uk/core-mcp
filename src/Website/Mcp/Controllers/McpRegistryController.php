@@ -7,8 +7,8 @@ namespace Core\Website\Mcp\Controllers;
 use Core\Front\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Mod\Mcp\Models\McpToolCall;
-use Mod\Mcp\Services\OpenApiGenerator;
+use Core\Mcp\Models\McpToolCall;
+use Core\Mcp\Services\OpenApiGenerator;
 use Symfony\Component\Yaml\Yaml;
 
 /**
