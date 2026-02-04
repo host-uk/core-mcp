@@ -7,11 +7,11 @@ namespace Core\Website\Mcp\View\Modal;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Core\Mod\Uptelligence\Models\AnalysisLog;
-use Core\Mod\Uptelligence\Models\Asset;
-use Core\Mod\Uptelligence\Models\Pattern;
-use Core\Mod\Uptelligence\Models\UpstreamTodo;
-use Core\Mod\Uptelligence\Models\Vendor;
+use Core\Core\Mod\Uptelligence\Models\AnalysisLog;
+use Core\Core\Mod\Uptelligence\Models\Asset;
+use Core\Core\Mod\Uptelligence\Models\Pattern;
+use Core\Core\Mod\Uptelligence\Models\UpstreamTodo;
+use Core\Core\Mod\Uptelligence\Models\Vendor;
 
 /**
  * MCP Dashboard
@@ -68,7 +68,7 @@ class Dashboard extends Component
                 'pending_todos' => UpstreamTodo::pending()->count(),
                 'quick_wins' => UpstreamTodo::quickWins()->count(),
                 'security_updates' => UpstreamTodo::pending()->where('type', 'security')->count(),
-                'recent_releases' => \Mod\Uptelligence\Models\VersionRelease::recent(7)->count(),
+                'recent_releases' => \Core\Mod\Uptelligence\Models\VersionRelease::recent(7)->count(),
                 'in_progress' => UpstreamTodo::inProgress()->count(),
             ];
         } catch (\Illuminate\Database\QueryException $e) {
