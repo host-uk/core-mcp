@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -251,6 +252,48 @@ class AuditLogService
     }
 
     /**
+     * Authorized export to CSV format.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function authorizedExportToCsv(
+        ?int $workspaceId = null,
+        ?Carbon $from = null,
+        ?Carbon $to = null,
+        ?string $toolName = null,
+        bool $sensitiveOnly = false
+    ): string {
+        $this->ensureAuthorized($workspaceId);
+
+        $csv = $this->exportToCsv($workspaceId, $from, $to, $toolName, $sensitiveOnly);
+
+        $this->logExport('csv', $workspaceId, $from, $to, $toolName, $sensitiveOnly);
+
+        return $csv;
+    }
+
+    /**
+     * Authorized export to JSON format.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function authorizedExportToJson(
+        ?int $workspaceId = null,
+        ?Carbon $from = null,
+        ?Carbon $to = null,
+        ?string $toolName = null,
+        bool $sensitiveOnly = false
+    ): string {
+        $this->ensureAuthorized($workspaceId);
+
+        $json = $this->exportToJson($workspaceId, $from, $to, $toolName, $sensitiveOnly);
+
+        $this->logExport('json', $workspaceId, $from, $to, $toolName, $sensitiveOnly);
+
+        return $json;
+    }
+
+    /**
      * Export to CSV format.
      */
     public function exportToCsv(
@@ -408,6 +451,88 @@ class AuditLogService
     // -------------------------------------------------------------------------
     // Protected Methods
     // -------------------------------------------------------------------------
+
+    /**
+     * Ensure the current user is authorized to export audit logs.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    protected function ensureAuthorized(?int $workspaceId = null): void
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            abort(401, 'Authentication required');
+        }
+
+        // Check for super-admin (Hades) access
+        if (method_exists($user, 'isHades') && $user->isHades()) {
+            return;
+        }
+
+        // Non-admins must specify a workspace
+        if ($workspaceId === null) {
+            abort(403, 'Administrator privileges required for global export');
+        }
+
+        // Check workspace access via Gate or relationship
+        if (Gate::denies('view-workspace-audit-log', $workspaceId)) {
+            // Fallback to checking workspace relationship if gate not defined
+            $hasAccess = false;
+            if (method_exists($user, 'workspaces')) {
+                $hasAccess = $user->workspaces()->where('workspaces.id', $workspaceId)->exists();
+            }
+
+            if (! $hasAccess) {
+                abort(403, 'You do not have permission to export audit logs for this workspace');
+            }
+        }
+    }
+
+    /**
+     * Log the export event.
+     */
+    protected function logExport(
+        string $format,
+        ?int $workspaceId,
+        ?Carbon $from,
+        ?Carbon $to,
+        ?string $toolName,
+        bool $sensitiveOnly
+    ): void {
+        $userId = auth()->id();
+
+        Log::info('Audit log exported', [
+            'user_id' => $userId,
+            'workspace_id' => $workspaceId,
+            'format' => $format,
+            'filters' => [
+                'from' => $from?->toDateString(),
+                'to' => $to?->toDateString(),
+                'tool_name' => $toolName,
+                'sensitive_only' => $sensitiveOnly,
+            ],
+            'ip' => request()->ip(),
+        ]);
+
+        // Record the export in the audit log itself
+        $this->record(
+            serverId: 'system',
+            toolName: 'audit_log_export',
+            inputParams: [
+                'format' => $format,
+                'from' => $from?->toIso8601String(),
+                'to' => $to?->toIso8601String(),
+                'tool_name' => $toolName,
+                'sensitive_only' => $sensitiveOnly,
+            ],
+            success: true,
+            workspaceId: $workspaceId,
+            actorType: 'user',
+            actorId: (int) $userId,
+            actorIp: request()->ip()
+        );
+    }
 
     /**
      * Get sensitivity info for a tool (cached).
