@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core\Mcp\Tools\Commerce;
 
 use Core\Mod\Commerce\Models\Coupon;

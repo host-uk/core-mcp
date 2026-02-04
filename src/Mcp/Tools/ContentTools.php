@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core\Mcp\Tools;
 
 use Core\Mod\Content\Enums\ContentType;
@@ -29,8 +31,8 @@ class ContentTools extends Tool
 
     public function handle(Request $request): Response
     {
-        $action = $request->get('action');
-        $workspaceSlug = $request->get('workspace');
+        $action = $request->input('action');
+        $workspaceSlug = $request->input('workspace');
 
         // Resolve workspace
         $workspace = $this->resolveWorkspace($workspaceSlug);
@@ -102,12 +104,12 @@ class ContentTools extends Tool
             ->with(['author', 'taxonomies']);
 
         // Filter by type (post/page)
-        if ($type = $request->get('type')) {
+        if ($type = $request->input('type')) {
             $query->where('type', $type);
         }
 
         // Filter by status
-        if ($status = $request->get('status')) {
+        if ($status = $request->input('status')) {
             if ($status === 'published') {
                 $query->published();
             } elseif ($status === 'scheduled') {
@@ -118,7 +120,7 @@ class ContentTools extends Tool
         }
 
         // Search
-        if ($search = $request->get('search')) {
+        if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhere('content_html', 'like', "%{$search}%")
@@ -127,8 +129,8 @@ class ContentTools extends Tool
         }
 
         // Pagination
-        $limit = min($request->get('limit', 20), 100);
-        $offset = $request->get('offset', 0);
+        $limit = min($request->input('limit', 20), 100);
+        $offset = $request->input('offset', 0);
 
         $total = $query->count();
         $items = $query->orderByDesc('updated_at')
@@ -165,7 +167,7 @@ class ContentTools extends Tool
      */
     protected function readContent(Workspace $workspace, Request $request): Response
     {
-        $identifier = $request->get('identifier');
+        $identifier = $request->input('identifier');
 
         if (! $identifier) {
             return Response::text(json_encode(['error' => 'identifier (slug or ID) is required']));
@@ -190,7 +192,7 @@ class ContentTools extends Tool
         $item->load(['author', 'taxonomies', 'revisions' => fn ($q) => $q->latest()->limit(5)]);
 
         // Return as markdown with frontmatter for AI context
-        $format = $request->get('format', 'json');
+        $format = $request->input('format', 'json');
 
         if ($format === 'markdown') {
             $markdown = $this->contentToMarkdown($item);
@@ -249,23 +251,23 @@ class ContentTools extends Tool
         }
 
         // Validate required fields
-        $title = $request->get('title');
+        $title = $request->input('title');
         if (! $title) {
             return Response::text(json_encode(['error' => 'title is required']));
         }
 
-        $type = $request->get('type', 'post');
+        $type = $request->input('type', 'post');
         if (! in_array($type, ['post', 'page'])) {
             return Response::text(json_encode(['error' => 'type must be post or page']));
         }
 
-        $status = $request->get('status', 'draft');
+        $status = $request->input('status', 'draft');
         if (! in_array($status, ['draft', 'publish', 'future', 'private'])) {
             return Response::text(json_encode(['error' => 'status must be draft, publish, future, or private']));
         }
 
         // Generate slug
-        $slug = $request->get('slug') ?: Str::slug($title);
+        $slug = $request->input('slug') ?: Str::slug($title);
         $baseSlug = $slug;
         $counter = 1;
 
@@ -275,9 +277,9 @@ class ContentTools extends Tool
         }
 
         // Parse markdown content if provided
-        $content = $request->get('content', '');
-        $contentHtml = $request->get('content_html');
-        $contentMarkdown = $request->get('content_markdown', $content);
+        $content = $request->input('content', '');
+        $contentHtml = $request->input('content_html');
+        $contentMarkdown = $request->input('content_markdown', $content);
 
         // Convert markdown to HTML if only markdown provided
         if ($contentMarkdown && ! $contentHtml) {
@@ -287,7 +289,7 @@ class ContentTools extends Tool
         // Handle scheduling
         $publishAt = null;
         if ($status === 'future') {
-            $publishAt = $request->get('publish_at');
+            $publishAt = $request->input('publish_at');
             if (! $publishAt) {
                 return Response::text(json_encode(['error' => 'publish_at is required for scheduled content']));
             }
@@ -302,22 +304,22 @@ class ContentTools extends Tool
             'status' => $status,
             'slug' => $slug,
             'title' => $title,
-            'excerpt' => $request->get('excerpt'),
+            'excerpt' => $request->input('excerpt'),
             'content_html' => $contentHtml,
             'content_markdown' => $contentMarkdown,
-            'seo_meta' => $request->get('seo_meta'),
+            'seo_meta' => $request->input('seo_meta'),
             'publish_at' => $publishAt,
             'last_edited_by' => Auth::id(),
         ]);
 
         // Handle categories
-        if ($categories = $request->get('categories')) {
+        if ($categories = $request->input('categories')) {
             $categoryIds = $this->resolveOrCreateTaxonomies($workspace, $categories, 'category');
             $item->taxonomies()->attach($categoryIds);
         }
 
         // Handle tags
-        if ($tags = $request->get('tags')) {
+        if ($tags = $request->input('tags')) {
             $tagIds = $this->resolveOrCreateTaxonomies($workspace, $tags, 'tag');
             $item->taxonomies()->attach($tagIds);
         }
@@ -350,7 +352,7 @@ class ContentTools extends Tool
      */
     protected function updateContent(Workspace $workspace, Request $request): Response
     {
-        $identifier = $request->get('identifier');
+        $identifier = $request->input('identifier');
 
         if (! $identifier) {
             return Response::text(json_encode(['error' => 'identifier (slug or ID) is required']));
@@ -372,41 +374,41 @@ class ContentTools extends Tool
         $updateData = [];
 
         if ($request->has('title')) {
-            $updateData['title'] = $request->get('title');
+            $updateData['title'] = $request->input('title');
         }
 
         if ($request->has('excerpt')) {
-            $updateData['excerpt'] = $request->get('excerpt');
+            $updateData['excerpt'] = $request->input('excerpt');
         }
 
         if ($request->has('content') || $request->has('content_markdown')) {
-            $contentMarkdown = $request->get('content_markdown') ?? $request->get('content');
+            $contentMarkdown = $request->input('content_markdown') ?? $request->input('content');
             $updateData['content_markdown'] = $contentMarkdown;
-            $updateData['content_html'] = $request->get('content_html') ?? Str::markdown($contentMarkdown);
+            $updateData['content_html'] = $request->input('content_html') ?? Str::markdown($contentMarkdown);
         }
 
         if ($request->has('content_html') && ! $request->has('content_markdown')) {
-            $updateData['content_html'] = $request->get('content_html');
+            $updateData['content_html'] = $request->input('content_html');
         }
 
         if ($request->has('status')) {
-            $status = $request->get('status');
+            $status = $request->input('status');
             if (! in_array($status, ['draft', 'publish', 'future', 'private'])) {
                 return Response::text(json_encode(['error' => 'status must be draft, publish, future, or private']));
             }
             $updateData['status'] = $status;
 
             if ($status === 'future' && $request->has('publish_at')) {
-                $updateData['publish_at'] = \Carbon\Carbon::parse($request->get('publish_at'));
+                $updateData['publish_at'] = \Carbon\Carbon::parse($request->input('publish_at'));
             }
         }
 
         if ($request->has('seo_meta')) {
-            $updateData['seo_meta'] = $request->get('seo_meta');
+            $updateData['seo_meta'] = $request->input('seo_meta');
         }
 
         if ($request->has('slug')) {
-            $newSlug = $request->get('slug');
+            $newSlug = $request->input('slug');
             if ($newSlug !== $item->slug) {
                 // Check uniqueness
                 if (ContentItem::forWorkspace($workspace->id)->where('slug', $newSlug)->where('id', '!=', $item->id)->exists()) {
@@ -423,18 +425,18 @@ class ContentTools extends Tool
 
         // Handle categories
         if ($request->has('categories')) {
-            $categoryIds = $this->resolveOrCreateTaxonomies($workspace, $request->get('categories'), 'category');
+            $categoryIds = $this->resolveOrCreateTaxonomies($workspace, $request->input('categories'), 'category');
             $item->categories()->sync($categoryIds);
         }
 
         // Handle tags
         if ($request->has('tags')) {
-            $tagIds = $this->resolveOrCreateTaxonomies($workspace, $request->get('tags'), 'tag');
+            $tagIds = $this->resolveOrCreateTaxonomies($workspace, $request->input('tags'), 'tag');
             $item->tags()->sync($tagIds);
         }
 
         // Create revision
-        $changeSummary = $request->get('change_summary', 'Updated via MCP');
+        $changeSummary = $request->input('change_summary', 'Updated via MCP');
         $item->createRevision(Auth::user(), ContentRevision::CHANGE_EDIT, $changeSummary);
 
         $item->refresh()->load(['author', 'taxonomies']);
@@ -458,7 +460,7 @@ class ContentTools extends Tool
      */
     protected function deleteContent(Workspace $workspace, Request $request): Response
     {
-        $identifier = $request->get('identifier');
+        $identifier = $request->input('identifier');
 
         if (! $identifier) {
             return Response::text(json_encode(['error' => 'identifier (slug or ID) is required']));
@@ -497,7 +499,7 @@ class ContentTools extends Tool
      */
     protected function listTaxonomies(Workspace $workspace, Request $request): Response
     {
-        $type = $request->get('type'); // category or tag
+        $type = $request->input('type'); // category or tag
 
         $query = ContentTaxonomy::where('workspace_id', $workspace->id);
 
@@ -609,25 +611,25 @@ class ContentTools extends Tool
     {
         return [
             'action' => $schema->string('Action: list, read, create, update, delete, taxonomies'),
-            'workspace' => $schema->string('Workspace slug (required for most actions)')->nullable(),
-            'identifier' => $schema->string('Content slug or ID (for read, update, delete)')->nullable(),
-            'type' => $schema->string('Content type: post or page (for list filter or create)')->nullable(),
-            'status' => $schema->string('Content status: draft, publish, future, private')->nullable(),
-            'search' => $schema->string('Search term for list action')->nullable(),
-            'limit' => $schema->integer('Max items to return (default 20, max 100)')->nullable(),
-            'offset' => $schema->integer('Offset for pagination')->nullable(),
-            'format' => $schema->string('Output format: json or markdown (for read action)')->nullable(),
-            'title' => $schema->string('Content title (for create/update)')->nullable(),
-            'slug' => $schema->string('URL slug (for create/update)')->nullable(),
-            'excerpt' => $schema->string('Content excerpt/summary')->nullable(),
-            'content' => $schema->string('Content body as markdown (for create/update)')->nullable(),
-            'content_html' => $schema->string('Content body as HTML (optional, auto-generated from markdown)')->nullable(),
-            'content_markdown' => $schema->string('Content body as markdown (alias for content)')->nullable(),
-            'categories' => $schema->array('Array of category slugs or names')->nullable(),
-            'tags' => $schema->array('Array of tag strings')->nullable(),
-            'seo_meta' => $schema->array('SEO metadata: {title, description, keywords}')->nullable(),
-            'publish_at' => $schema->string('ISO datetime for scheduled publishing (status=future)')->nullable(),
-            'change_summary' => $schema->string('Summary of changes for revision history (update action)')->nullable(),
+            'workspace' => $schema->string('Workspace slug (required for most actions)'),
+            'identifier' => $schema->string('Content slug or ID (for read, update, delete)'),
+            'type' => $schema->string('Content type: post or page (for list filter or create)'),
+            'status' => $schema->string('Content status: draft, publish, future, private'),
+            'search' => $schema->string('Search term for list action'),
+            'limit' => $schema->integer('Max items to return (default 20, max 100)'),
+            'offset' => $schema->integer('Offset for pagination'),
+            'format' => $schema->string('Output format: json or markdown (for read action)'),
+            'title' => $schema->string('Content title (for create/update)'),
+            'slug' => $schema->string('URL slug (for create/update)'),
+            'excerpt' => $schema->string('Content excerpt/summary'),
+            'content' => $schema->string('Content body as markdown (for create/update)'),
+            'content_html' => $schema->string('Content body as HTML (optional, auto-generated from markdown)'),
+            'content_markdown' => $schema->string('Content body as markdown (alias for content)'),
+            'categories' => $schema->array('Array of category slugs or names'),
+            'tags' => $schema->array('Array of tag strings'),
+            'seo_meta' => $schema->array('SEO metadata: {title, description, keywords}'),
+            'publish_at' => $schema->string('ISO datetime for scheduled publishing (status=future)'),
+            'change_summary' => $schema->string('Summary of changes for revision history (update action)'),
         ];
     }
 }
