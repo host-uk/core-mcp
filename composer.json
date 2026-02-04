@@ -10,7 +10,8 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/host-uk/core"
+            "url": "https://github.com/host-uk/core-php",
+            "no-api": true
         }
     ],
     "autoload": {
@@ -24,11 +25,15 @@
             "Core\\Mcp\\Tests\\": "tests/"
         }
     },
+    "config": {
+        "preferred-install": "dist",
+        "github-protocols": ["https"]
+    },
     "extra": {
         "laravel": {
             "providers": []
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }
