@@ -77,7 +77,7 @@ jobs:
         id: test
         run: |
           set +e
-          OUTPUT=$(vendor/bin/phpunit --log-junit test-results.xml 2>&1)
+          OUTPUT=$(vendor/bin/pest --log-junit test-results.xml 2>&1)
           EXIT_CODE=$?
           echo "$OUTPUT"
 
@@ -130,6 +130,10 @@ jobs:
         id: stan
         run: |
           set +e
+          # Create default config if missing
+          if [ ! -f phpstan.neon ] && [ ! -f phpstan.neon.dist ]; then
+            echo "parameters: { level: 5, paths: [src, app] }" > phpstan.neon
+          fi
           vendor/bin/phpstan analyse --error-format=json --no-progress > phpstan.json 2>&1
           EXIT_CODE=$?
 
@@ -181,6 +185,10 @@ jobs:
         id: psalm
         run: |
           set +e
+          # Create default config if missing
+          if [ ! -f psalm.xml ]; then
+            vendor/bin/psalm --init src 1 || true
+          fi
           vendor/bin/psalm --output-format=json --show-info=false > psalm.json 2>&1
           EXIT_CODE=$?
 
