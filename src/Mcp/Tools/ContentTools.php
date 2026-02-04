@@ -5,6 +5,7 @@ namespace Core\Mcp\Tools;
 use Core\Mod\Content\Enums\ContentType;
 use Core\Mod\Content\Models\ContentItem;
 use Core\Mod\Content\Models\ContentRevision;
+use Core\Mcp\Tools\Concerns\RequiresWorkspaceContext;
 use Core\Mod\Content\Models\ContentTaxonomy;
 use Core\Tenant\Models\Workspace;
 use Core\Tenant\Services\EntitlementService;
@@ -25,20 +26,16 @@ use Laravel\Mcp\Server\Tool;
  */
 class ContentTools extends Tool
 {
+    use RequiresWorkspaceContext;
+
     protected string $description = 'Manage content items - list, read, create, update, and delete blog posts and pages';
 
     public function handle(Request $request): Response
     {
         $action = $request->get('action');
-        $workspaceSlug = $request->get('workspace');
 
-        // Resolve workspace
-        $workspace = $this->resolveWorkspace($workspaceSlug);
-        if (! $workspace && in_array($action, ['list', 'read', 'create', 'update', 'delete'])) {
-            return Response::text(json_encode([
-                'error' => 'Workspace is required. Provide a workspace slug.',
-            ]));
-        }
+        // Get workspace from authenticated context
+        $workspace = $this->getWorkspace();
 
         return match ($action) {
             'list' => $this->listContent($workspace, $request),
@@ -51,20 +48,6 @@ class ContentTools extends Tool
                 'error' => 'Invalid action. Available: list, read, create, update, delete, taxonomies',
             ])),
         };
-    }
-
-    /**
-     * Resolve workspace from slug.
-     */
-    protected function resolveWorkspace(?string $slug): ?Workspace
-    {
-        if (! $slug) {
-            return null;
-        }
-
-        return Workspace::where('slug', $slug)
-            ->orWhere('id', $slug)
-            ->first();
     }
 
     /**
@@ -609,7 +592,6 @@ class ContentTools extends Tool
     {
         return [
             'action' => $schema->string('Action: list, read, create, update, delete, taxonomies'),
-            'workspace' => $schema->string('Workspace slug (required for most actions)')->nullable(),
             'identifier' => $schema->string('Content slug or ID (for read, update, delete)')->nullable(),
             'type' => $schema->string('Content type: post or page (for list filter or create)')->nullable(),
             'status' => $schema->string('Content status: draft, publish, future, private')->nullable(),
