@@ -7,6 +7,22 @@
         "php": "^8.2",
         "host-uk/core": "@dev"
     },
+    "require-dev": {
+        "laravel/pint": "^1.13",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^10.0",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "phpstan/phpstan": "^1.10",
+        "vimeo/psalm": "^5.0"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/host-uk/core-php",
+            "no-api": true
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Core\\Mcp\\": "src/Mcp/",
@@ -18,11 +34,18 @@
             "Core\\Mcp\\Tests\\": "tests/"
         }
     },
+    "config": {
+        "preferred-install": "dist",
+        "github-protocols": ["https"],
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
     "extra": {
         "laravel": {
             "providers": []
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }
