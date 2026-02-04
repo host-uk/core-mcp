@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Core\Mcp\Services;
 
-use Core\Mod\Api\Models\WebhookDelivery;
-use Core\Mod\Api\Models\WebhookEndpoint;
+use Core\Api\Models\WebhookDelivery;
+use Core\Api\Models\WebhookEndpoint;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 

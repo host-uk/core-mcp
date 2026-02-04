@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Core\Mod\Api\Models\ApiKey;
+use Core\Api\Models\ApiKey;
 use Symfony\Component\Yaml\Yaml;
 
 /**

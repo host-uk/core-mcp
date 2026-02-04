@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Core\Mcp\Tools\Commerce;
 
-use Core\Mod\Commerce\Models\Subscription;
+use Core\Commerce\Models\Subscription;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Mod\Mcp\Tools\Concerns\RequiresWorkspaceContext;
+use Core\Mcp\Tools\Concerns\RequiresWorkspaceContext;
 
 /**
  * Get billing status for the authenticated workspace.

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Core\Website\Mcp\View\Modal;
 
 use Livewire\Component;
-use Core\Mod\Api\Models\ApiKey;
-use Mod\Tenant\Models\Workspace;
+use Core\Api\Models\ApiKey;
+use Core\Tenant\Models\Workspace;
 
 /**
  * MCP API Key Manager.

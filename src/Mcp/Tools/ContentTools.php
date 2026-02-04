@@ -2,10 +2,10 @@
 
 namespace Core\Mcp\Tools;
 
-use Core\Mod\Content\Enums\ContentType;
-use Core\Mod\Content\Models\ContentItem;
-use Core\Mod\Content\Models\ContentRevision;
-use Core\Mod\Content\Models\ContentTaxonomy;
+use Core\Content\Enums\ContentType;
+use Core\Content\Models\ContentItem;
+use Core\Content\Models\ContentRevision;
+use Core\Content\Models\ContentTaxonomy;
 use Core\Tenant\Models\Workspace;
 use Core\Tenant\Services\EntitlementService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;

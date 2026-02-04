@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Core\Mcp\Tools\Commerce;
 
-use Core\Mod\Commerce\Models\Subscription;
-use Core\Mod\Commerce\Services\SubscriptionService;
+use Core\Commerce\Models\Subscription;
+use Core\Commerce\Services\SubscriptionService;
 use Core\Tenant\Models\Package;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Mod\Mcp\Tools\Concerns\RequiresWorkspaceContext;
+use Core\Mcp\Tools\Concerns\RequiresWorkspaceContext;
 
 /**
  * Preview or execute a plan upgrade/downgrade for the authenticated workspace.
