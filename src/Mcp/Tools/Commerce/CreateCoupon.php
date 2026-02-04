@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core\Mcp\Tools\Commerce;
 
 use Core\Mod\Commerce\Models\Coupon;
+use Core\Mcp\Tools\Concerns\RequiresWorkspaceContext;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -10,10 +13,31 @@ use Laravel\Mcp\Server\Tool;
 
 class CreateCoupon extends Tool
 {
+    use RequiresWorkspaceContext;
+
     protected string $description = 'Create a new discount coupon code';
 
     public function handle(Request $request): Response
     {
+        // Ensure workspace context and authorization
+        $workspace = $this->getWorkspace();
+        $user = auth()->user();
+
+        // Verify the caller has permission (admin role check)
+        $isHades = method_exists($user, 'isHades') && $user->isHades();
+        $isWorkspaceAdmin = $user && $workspace->users()
+            ->where('user_id', $user->id)
+            ->whereIn('role', ['admin', 'owner'])
+            ->exists();
+
+        // If authenticated via API key, we trust the key has proper workspace access
+        // but we still want to ensure it's not a restricted key if possible.
+        if (! $isHades && ! $isWorkspaceAdmin && ! $request->attributes->has('api_key')) {
+            return Response::text(json_encode([
+                'error' => 'Unauthorized. Admin permissions required to create coupons.',
+            ]));
+        }
+
         $code = strtoupper($request->input('code'));
         $name = $request->input('name');
         $type = $request->input('type', 'percentage');
@@ -29,10 +53,10 @@ class CreateCoupon extends Tool
             ]));
         }
 
-        // Check for existing code
-        if (Coupon::where('code', $code)->exists()) {
+        // Check for existing code (workspace-scoped)
+        if (Coupon::where('code', $code)->where('workspace_id', $workspace->id)->exists()) {
             return Response::text(json_encode([
-                'error' => 'A coupon with this code already exists.',
+                'error' => 'A coupon with this code already exists in this workspace.',
             ]));
         }
 
@@ -52,6 +76,7 @@ class CreateCoupon extends Tool
 
         try {
             $coupon = Coupon::create([
+                'workspace_id' => $workspace->id,
                 'code' => $code,
                 'name' => $name,
                 'type' => $type,
