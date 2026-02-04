@@ -6,6 +6,9 @@ namespace Core\Mcp\View\Modal\Admin;
 
 use Core\Mod\Api\Models\ApiKey;
 use Core\Tenant\Models\Workspace;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -36,6 +39,7 @@ class ApiKeyManager extends Component
 
     public function mount(Workspace $workspace): void
     {
+        Gate::authorize('view', $workspace);
         $this->workspace = $workspace;
     }
 
@@ -54,9 +58,20 @@ class ApiKeyManager extends Component
 
     public function createKey(): void
     {
+        Gate::authorize('create', ApiKey::class);
+
+        if (RateLimiter::tooManyAttempts('create-key:'.auth()->id(), 5)) {
+            $seconds = RateLimiter::availableIn('create-key:'.auth()->id());
+            $this->addError('newKeyName', __('Too many attempts. Please try again in :seconds seconds.', ['seconds' => $seconds]));
+
+            return;
+        }
+
         $this->validate([
             'newKeyName' => 'required|string|max:100',
         ]);
+
+        RateLimiter::hit('create-key:'.auth()->id());
 
         $expiresAt = match ($this->newKeyExpiry) {
             '30days' => now()->addDays(30),
@@ -77,6 +92,13 @@ class ApiKeyManager extends Component
         $this->showCreateModal = false;
         $this->showNewKeyModal = true;
 
+        Log::channel('security')->info('MCP API key created', [
+            'workspace_id' => $this->workspace->id,
+            'user_id' => auth()->id(),
+            'key_name' => $this->newKeyName,
+            'scopes' => $this->newKeyScopes,
+        ]);
+
         session()->flash('message', 'API key created successfully.');
     }
 
@@ -88,8 +110,21 @@ class ApiKeyManager extends Component
 
     public function revokeKey(int $keyId): void
     {
-        $key = $this->workspace->apiKeys()->findOrFail($keyId);
+        $key = $this->workspace->apiKeys()->find($keyId);
+
+        if (! $key) {
+            return;
+        }
+
+        Gate::authorize('delete', $key);
+
         $key->revoke();
+
+        Log::channel('security')->info('MCP API key revoked', [
+            'workspace_id' => $this->workspace->id,
+            'user_id' => auth()->id(),
+            'key_id' => $keyId,
+        ]);
 
         session()->flash('message', 'API key revoked.');
     }
