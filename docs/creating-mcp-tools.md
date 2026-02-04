@@ -204,7 +204,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Mod\Mcp\Tools\Concerns\RequiresWorkspaceContext;
+use Core\Mcp\Tools\Concerns\RequiresWorkspaceContext;
 
 class ListWorkspacePostsTool extends Tool
 {
@@ -299,9 +299,9 @@ declare(strict_types=1);
 
 namespace Mod\Blog\Tools;
 
-use Core\Mod\Mcp\Dependencies\DependencyType;
-use Core\Mod\Mcp\Dependencies\HasDependencies;
-use Core\Mod\Mcp\Dependencies\ToolDependency;
+use Core\Mcp\Dependencies\DependencyType;
+use Core\Mcp\Dependencies\HasDependencies;
+use Core\Mcp\Dependencies\ToolDependency;
 use Laravel\Mcp\Server\Tool;
 
 class UpdateTaskTool extends Tool implements HasDependencies
@@ -389,7 +389,7 @@ public function dependencies(): array
 Use the `ValidatesDependencies` trait for inline validation:
 
 ```php
-use Core\Mod\Mcp\Tools\Concerns\ValidatesDependencies;
+use Core\Mcp\Tools\Concerns\ValidatesDependencies;
 
 class MyTool extends Tool
 {
@@ -640,7 +640,7 @@ use Tests\TestCase;
 use Mod\Blog\Tools\ListPostsTool;
 use Mod\Blog\Models\Post;
 use Core\Mod\Tenant\Models\Workspace;
-use Mod\Mcp\Context\WorkspaceContext;
+use Core\Mcp\Context\WorkspaceContext;
 
 class ListPostsToolTest extends TestCase
 {
@@ -713,7 +713,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Mod\Mcp\Tools\Concerns\RequiresWorkspaceContext;
+use Core\Mcp\Tools\Concerns\RequiresWorkspaceContext;
 
 /**
  * List invoices for the authenticated workspace.

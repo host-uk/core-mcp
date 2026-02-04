@@ -537,8 +537,8 @@ return [
 
 ```php
 use Tests\TestCase;
-use Core\Mod\Mcp\Services\SqlQueryValidator;
-use Core\Mod\Mcp\Exceptions\ForbiddenQueryException;
+use Core\Mcp\Services\SqlQueryValidator;
+use Core\Mcp\Exceptions\ForbiddenQueryException;
 
 class SqlSecurityTest extends TestCase
 {
