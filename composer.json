@@ -3,9 +3,26 @@
     "description": "MCP (Model Context Protocol) tools module for Core PHP framework",
     "keywords": ["laravel", "mcp", "ai", "tools", "claude"],
     "license": "EUPL-1.2",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/host-uk/core-php"
+        }
+    ],
     "require": {
         "php": "^8.2",
         "host-uk/core": "@dev"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.9",
+        "laravel/pint": "^1.18",
+        "nunomaduro/collision": "^8.6",
+        "pestphp/pest": "^3.0",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.5",
+        "psalm/plugin-laravel": "^3.0",
+        "vimeo/psalm": "^6.14"
     },
     "autoload": {
         "psr-4": {

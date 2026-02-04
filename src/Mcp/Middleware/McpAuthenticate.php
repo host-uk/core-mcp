@@ -58,13 +58,12 @@ class McpAuthenticate
     }
 
     /**
-     * Authenticate using API key from header or query.
+     * Authenticate using API key from header.
      */
     protected function authenticateByApiKey(Request $request): ?Workspace
     {
         $apiKey = $request->header('X-API-Key')
-            ?? $request->header('Authorization')
-            ?? $request->query('api_key');
+            ?? $request->header('Authorization');
 
         if (! $apiKey) {
             return null;
