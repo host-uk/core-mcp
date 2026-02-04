@@ -33,6 +33,11 @@ class QueryExecutionService
     public const FEATURE_QUERY_TIMEOUT = 'mcp.query_timeout';
 
     /**
+     * Absolute maximum rows that can be fetched, regardless of tier.
+     */
+    protected const HARD_MAX_ROWS = 10000;
+
+    /**
      * Default tier limits.
      */
     protected const DEFAULT_TIER_LIMITS = [
@@ -90,19 +95,29 @@ class QueryExecutionService
             $db = $this->getConnection($connection);
             $this->applyTimeout($db, $limits['timeout_seconds']);
 
-            // Execute the query
-            $results = $db->select($query);
-            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
-            $totalRows = count($results);
-
-            // Check result size and truncate if necessary
-            $truncated = false;
+            // Apply safety limit to the query to prevent fetching too many rows from the database
             $maxRows = $limits['max_rows'];
+            $limitedQuery = $this->applyLimit($query, $maxRows);
 
-            if ($totalRows > $maxRows) {
-                $truncated = true;
-                $results = array_slice($results, 0, $maxRows);
+            // Execute the query using a cursor for memory efficiency
+            $results = [];
+            $totalRows = 0;
+            $fetchLimit = $maxRows + 1;
+
+            foreach ($db->cursor($limitedQuery) as $row) {
+                $totalRows++;
+                if ($totalRows <= $maxRows) {
+                    $results[] = $row;
+                } else {
+                    // We've reached the limit (with margin), stop fetching
+                    break;
+                }
             }
+
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+
+            // Check result size and handle truncation
+            $truncated = $totalRows > $maxRows;
 
             // Log the query execution
             if ($truncated) {
@@ -204,8 +219,10 @@ class QueryExecutionService
         $configuredLimits = Config::get('mcp.database.tier_limits', []);
         $defaultLimits = self::DEFAULT_TIER_LIMITS[$tier] ?? self::DEFAULT_TIER_LIMITS['free'];
 
+        $maxRows = $configuredLimits[$tier]['max_rows'] ?? $defaultLimits['max_rows'];
+
         return [
-            'max_rows' => $configuredLimits[$tier]['max_rows'] ?? $defaultLimits['max_rows'],
+            'max_rows' => min($maxRows, self::HARD_MAX_ROWS),
             'timeout_seconds' => $configuredLimits[$tier]['timeout_seconds'] ?? $defaultLimits['timeout_seconds'],
         ];
     }
@@ -278,6 +295,39 @@ class QueryExecutionService
     protected function getConnection(?string $connection): Connection
     {
         return DB::connection($connection);
+    }
+
+    /**
+     * Appends or replaces the LIMIT clause to enforce tier limits at the database level.
+     *
+     * Fetches maxRows + 1 to allow for truncation detection.
+     */
+    private function applyLimit(string $query, int $maxRows): string
+    {
+        $limitWithMargin = $maxRows + 1;
+        $workQuery = rtrim(trim($query), '; ');
+
+        // Check if LIMIT is already present at the end of the query
+        if (preg_match('/\bLIMIT\s+(\d+)(?:\s*,\s*(\d+))?\s*$/i', $workQuery, $matches)) {
+            // matches[1] is offset if matches[2] exists, otherwise it's the limit
+            $hasOffset = isset($matches[2]);
+            $existingLimit = $hasOffset ? (int) $matches[2] : (int) $matches[1];
+
+            if ($existingLimit > $limitWithMargin) {
+                if ($hasOffset) {
+                    $offset = $matches[1];
+
+                    return preg_replace('/\bLIMIT\s+\d+\s*,\s*\d+\s*$/i', "LIMIT $offset, $limitWithMargin", $workQuery);
+                } else {
+                    return preg_replace('/\bLIMIT\s+\d+\s*$/i', "LIMIT $limitWithMargin", $workQuery);
+                }
+            }
+
+            return $workQuery;
+        }
+
+        // No LIMIT found, append it
+        return $workQuery.' LIMIT '.$limitWithMargin;
     }
 
     /**

@@ -76,6 +76,20 @@ class QueryExecutionServiceTest extends TestCase
         $this->assertEquals(3, $limits['timeout_seconds']);
     }
 
+    public function test_get_limits_for_tier_enforces_hard_max_rows(): void
+    {
+        Config::set('mcp.database.tier_limits', [
+            'unlimited' => [
+                'max_rows' => 999999,
+                'timeout_seconds' => 120,
+            ],
+        ]);
+
+        $limits = $this->executionService->getLimitsForTier('unlimited');
+
+        $this->assertEquals(10000, $limits['max_rows']);
+    }
+
     public function test_get_limits_for_unknown_tier_falls_back_to_free(): void
     {
         $limits = $this->executionService->getLimitsForTier('nonexistent');
@@ -150,7 +164,8 @@ class QueryExecutionServiceTest extends TestCase
         $this->auditMock->shouldReceive('recordTruncated')
             ->once()
             ->withArgs(function ($query, $bindings, $durationMs, $returnedRows, $maxRows) {
-                return $returnedRows === 150 && $maxRows === 100;
+                // Now returns 101 because of the LIMIT margin
+                return $returnedRows === 101 && $maxRows === 100;
             });
 
         $result = $this->executionService->execute(
@@ -161,7 +176,7 @@ class QueryExecutionServiceTest extends TestCase
         $this->assertCount(100, $result['data']);
         $this->assertTrue($result['meta']['truncated']);
         $this->assertEquals(100, $result['meta']['rows_returned']);
-        $this->assertStringContains('150+', (string) $result['meta']['rows_total']);
+        $this->assertStringContains('101+', (string) $result['meta']['rows_total']);
         $this->assertNotNull($result['meta']['warning']);
     }
 
