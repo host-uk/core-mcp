@@ -2,7 +2,7 @@
 
 namespace Core\Mcp\Resources;
 
-use Core\Mod\Content\Models\ContentItem;
+use Core\Content\Models\ContentItem;
 use Core\Tenant\Models\Workspace;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;

@@ -2,7 +2,7 @@
 
 namespace Core\Mcp\Tools\Commerce;
 
-use Core\Mod\Commerce\Models\Coupon;
+use Core\Commerce\Models\Coupon;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;

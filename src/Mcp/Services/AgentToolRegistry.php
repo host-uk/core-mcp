@@ -7,7 +7,7 @@ namespace Core\Mcp\Services;
 use Core\Mcp\Dependencies\HasDependencies;
 use Core\Mcp\Services\ToolDependencyService;
 use Illuminate\Support\Collection;
-use Core\Mod\Api\Models\ApiKey;
+use Core\Api\Models\ApiKey;
 use Core\Mcp\Tools\Agent\Contracts\AgentToolInterface;
 
 /**

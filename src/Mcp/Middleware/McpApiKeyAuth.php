@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Core\Mcp\Middleware;
 
-use Core\Mod\Api\Models\ApiKey;
+use Core\Api\Models\ApiKey;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

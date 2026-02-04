@@ -13,7 +13,7 @@
         "pestphp/pest": "^3.0",
         "pestphp/pest-plugin-laravel": "^3.0",
         "phpstan/phpstan": "^1.12",
-        "vimeo/psalm": "^5.25"
+        "vimeo/psalm": "^6.0"
     },
     "repositories": [
         {

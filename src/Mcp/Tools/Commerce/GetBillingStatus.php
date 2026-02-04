@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Core\Mcp\Tools\Commerce;
 
-use Core\Mod\Commerce\Models\Subscription;
+use Core\Commerce\Models\Subscription;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Core\Mcp\View\Modal\Admin;
 
-use Core\Mod\Api\Models\ApiKey;
+use Core\Api\Models\ApiKey;
 use Core\Mcp\Services\ToolRegistry;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
