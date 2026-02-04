@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Mod\Mcp\Services;
+namespace Core\Mcp\Services;
 
 use Core\Mcp\Dependencies\HasDependencies;
 use Core\Mcp\Services\ToolDependencyService;
 use Illuminate\Support\Collection;
-use Mod\Api\Models\ApiKey;
-use Mod\Mcp\Tools\Agent\Contracts\AgentToolInterface;
+use Core\Mod\Api\Models\ApiKey;
+use Core\Mcp\Tools\Agent\Contracts\AgentToolInterface;
 
 /**
  * Registry for MCP Agent Server tools.

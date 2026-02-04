@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Mod\Mcp\Services;
+namespace Core\Mcp\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Mod\Agentic\Models\AgentPlan;
-use Mod\Agentic\Models\AgentSession;
+use Core\Mod\Agentic\Models\AgentPlan;
+use Core\Mod\Agentic\Models\AgentSession;
 
 /**
  * Agent Session Service - manages session persistence for agent continuity.

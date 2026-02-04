@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Mod\Mcp\Middleware\McpAuthenticate;
-use Website\Mcp\Controllers\McpRegistryController;
+use Core\Mcp\Middleware\McpAuthenticate;
+use Core\Website\Mcp\Controllers\McpRegistryController;
 
 /*
 |--------------------------------------------------------------------------
