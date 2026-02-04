@@ -10,7 +10,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/host-uk/core"
+            "url": "https://github.com/host-uk/core-php"
         }
     ],
     "autoload": {
@@ -29,6 +29,6 @@
             "providers": []
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }

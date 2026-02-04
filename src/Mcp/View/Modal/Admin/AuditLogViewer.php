@@ -195,11 +195,11 @@ class AuditLogViewer extends Component
         $sensitiveOnly = $this->sensitivity === 'sensitive';
 
         if ($this->exportFormat === 'csv') {
-            $content = $auditLogService->authorizedExportToCsv($workspaceId, $from, $to, $tool, $sensitiveOnly);
+            $content = $auditLogService->authorisedExportToCsv($workspaceId, $from, $to, $tool, $sensitiveOnly);
             $filename = 'mcp-audit-log-'.now()->format('Y-m-d-His').'.csv';
             $contentType = 'text/csv';
         } else {
-            $content = $auditLogService->authorizedExportToJson($workspaceId, $from, $to, $tool, $sensitiveOnly);
+            $content = $auditLogService->authorisedExportToJson($workspaceId, $from, $to, $tool, $sensitiveOnly);
             $filename = 'mcp-audit-log-'.now()->format('Y-m-d-His').'.json';
             $contentType = 'application/json';
         }

@@ -252,18 +252,18 @@ class AuditLogService
     }
 
     /**
-     * Authorized export to CSV format.
+     * Authorised export to CSV format.
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function authorizedExportToCsv(
+    public function authorisedExportToCsv(
         ?int $workspaceId = null,
         ?Carbon $from = null,
         ?Carbon $to = null,
         ?string $toolName = null,
         bool $sensitiveOnly = false
     ): string {
-        $this->ensureAuthorized($workspaceId);
+        $this->ensureAuthorised($workspaceId);
 
         $csv = $this->exportToCsv($workspaceId, $from, $to, $toolName, $sensitiveOnly);
 
@@ -273,18 +273,18 @@ class AuditLogService
     }
 
     /**
-     * Authorized export to JSON format.
+     * Authorised export to JSON format.
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function authorizedExportToJson(
+    public function authorisedExportToJson(
         ?int $workspaceId = null,
         ?Carbon $from = null,
         ?Carbon $to = null,
         ?string $toolName = null,
         bool $sensitiveOnly = false
     ): string {
-        $this->ensureAuthorized($workspaceId);
+        $this->ensureAuthorised($workspaceId);
 
         $json = $this->exportToJson($workspaceId, $from, $to, $toolName, $sensitiveOnly);
 
@@ -453,11 +453,11 @@ class AuditLogService
     // -------------------------------------------------------------------------
 
     /**
-     * Ensure the current user is authorized to export audit logs.
+     * Ensure the current user is authorised to export audit logs.
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    protected function ensureAuthorized(?int $workspaceId = null): void
+    protected function ensureAuthorised(?int $workspaceId = null): void
     {
         $user = auth()->user();
 
