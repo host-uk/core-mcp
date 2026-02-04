@@ -184,6 +184,8 @@ class AuditLogViewer extends Component
 
     public function export(): StreamedResponse
     {
+        $this->checkHadesAccess();
+
         $auditLogService = app(AuditLogService::class);
 
         $workspaceId = $this->workspace ? (int) $this->workspace : null;
@@ -193,11 +195,11 @@ class AuditLogViewer extends Component
         $sensitiveOnly = $this->sensitivity === 'sensitive';
 
         if ($this->exportFormat === 'csv') {
-            $content = $auditLogService->exportToCsv($workspaceId, $from, $to, $tool, $sensitiveOnly);
+            $content = $auditLogService->authorisedExportToCsv($workspaceId, $from, $to, $tool, $sensitiveOnly);
             $filename = 'mcp-audit-log-'.now()->format('Y-m-d-His').'.csv';
             $contentType = 'text/csv';
         } else {
-            $content = $auditLogService->exportToJson($workspaceId, $from, $to, $tool, $sensitiveOnly);
+            $content = $auditLogService->authorisedExportToJson($workspaceId, $from, $to, $tool, $sensitiveOnly);
             $filename = 'mcp-audit-log-'.now()->format('Y-m-d-His').'.json';
             $contentType = 'application/json';
         }
