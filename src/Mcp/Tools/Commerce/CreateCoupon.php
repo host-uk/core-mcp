@@ -7,6 +7,7 @@ namespace Core\Mcp\Tools\Commerce;
 use Core\Mod\Commerce\Models\Coupon;
 use Core\Mcp\Tools\Concerns\RequiresWorkspaceContext;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -21,20 +22,20 @@ class CreateCoupon extends Tool
     {
         // Ensure workspace context and authorization
         $workspace = $this->getWorkspace();
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Verify the caller has permission (admin role check)
-        $isHades = method_exists($user, 'isHades') && $user->isHades();
+        $isHades = $user && method_exists($user, 'isHades') && $user->isHades();
         $isWorkspaceAdmin = $user && $workspace->users()
-            ->where('user_id', $user->id)
-            ->whereIn('role', ['admin', 'owner'])
+            ->wherePivotIn('role', ['admin', 'owner'])
+            ->where('users.id', $user->id)
             ->exists();
 
         // If authenticated via API key, we trust the key has proper workspace access
         // but we still want to ensure it's not a restricted key if possible.
         if (! $isHades && ! $isWorkspaceAdmin && ! $request->attributes->has('api_key')) {
             return Response::text(json_encode([
-                'error' => 'Unauthorized. Admin permissions required to create coupons.',
+                'error' => 'Unauthorised. Admin permissions required to create coupons.',
             ]));
         }
 
