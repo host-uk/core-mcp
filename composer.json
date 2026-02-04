@@ -7,6 +7,14 @@
         "php": "^8.2",
         "host-uk/core": "@dev"
     },
+    "require-dev": {
+        "laravel/pint": "^1.18",
+        "nunomaduro/collision": "^8.5",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "phpstan/phpstan": "^1.12",
+        "vimeo/psalm": "^5.25"
+    },
     "repositories": [
         {
             "type": "vcs",
