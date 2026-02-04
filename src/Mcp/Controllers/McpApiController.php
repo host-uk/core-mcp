@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Mod\Api\Controllers;
+namespace Core\Mcp\Controllers;
 
 use Core\Front\Controller;
 use Core\Mcp\Services\McpQuotaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Mod\Api\Models\ApiKey;
 use Core\Mcp\Models\McpApiRequest;
 use Core\Mcp\Models\McpToolCall;
@@ -86,8 +88,8 @@ class McpApiController extends Controller
     public function callTool(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'server' => 'required|string|max:64',
-            'tool' => 'required|string|max:128',
+            'server' => 'required|string|max:64|regex:/^[a-z0-9-]+$/',
+            'tool' => 'required|string|max:128|regex:/^[a-zA-Z0-9_-]+$/',
             'arguments' => 'nullable|array',
         ]);
 
@@ -115,6 +117,28 @@ class McpApiController extends Controller
         // Get API key for logging
         $apiKey = $request->attributes->get('api_key');
         $workspace = $apiKey?->workspace;
+
+        // Quota check
+        if ($workspace) {
+            $quotaCheck = app(McpQuotaService::class)->checkQuotaDetailed($workspace);
+            if (! $quotaCheck['allowed']) {
+                return response()->json([
+                    'error' => 'quota_exceeded',
+                    'message' => $quotaCheck['reason'] ?? 'Monthly quota exceeded',
+                    'quota' => $quotaCheck,
+                ], 403);
+            }
+        }
+
+        // Rate limiting
+        $rateKey = 'mcp_api_tool_call:' . ($workspace?->id ?: $request->ip());
+        if (RateLimiter::tooManyAttempts($rateKey, 60)) {
+            return response()->json([
+                'error' => 'too_many_requests',
+                'message' => 'Rate limit exceeded. Please try again later.',
+            ], 429);
+        }
+        RateLimiter::hit($rateKey, 60);
 
         $startTime = microtime(true);
 
@@ -223,9 +247,12 @@ class McpApiController extends Controller
             ],
         ];
 
-        // Execute via process
+        // Execute via process safely by splitting command into arguments
+        $commandParts = Str::of($command)->explode(' ')->filter()->toArray();
+        $cmd = array_merge(['php', 'artisan'], $commandParts);
+
         $process = proc_open(
-            ['php', 'artisan', $command],
+            $cmd,
             [
                 0 => ['pipe', 'r'],
                 1 => ['pipe', 'w'],
