@@ -318,8 +318,8 @@ class QueryExecutionService
                     break;
             }
         } catch (\Exception $e) {
-            // Log but don't fail - timeout is a safety measure
-            report($e);
+            // Fail the query if timeout cannot be set - security control
+            throw $e;
         }
     }
 
