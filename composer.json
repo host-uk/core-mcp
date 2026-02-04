@@ -9,8 +9,9 @@
     },
     "repositories": [
         {
-            "type": "vcs",
-            "url": "https://github.com/host-uk/core-php.git"
+            "type": "git",
+            "url": "https://github.com/host-uk/core-php.git",
+            "no-api": true
         }
     ],
     "autoload": {
