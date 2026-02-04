@@ -23,7 +23,12 @@ class CheckMcpQuota
 
     public function handle(Request $request, Closure $next): Response
     {
-        $workspace = $request->attributes->get('workspace');
+        $context = $request->attributes->get('mcp_workspace_context');
+        $workspace = $request->attributes->get('mcp_workspace')
+            ?? $request->attributes->get('workspace')
+            ?? $context?->workspace
+            ?? $context?->workspaceId
+            ?? $request->attributes->get('api_key')?->workspace;
 
         // No workspace context = skip quota check (other middleware handles auth)
         if (! $workspace) {
