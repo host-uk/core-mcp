@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Core\Mcp\Controllers;
 
 use Core\Front\Controller;
+use Core\Mcp\Models\McpApiRequest;
+use Core\Mcp\Models\McpToolCall;
 use Core\Mcp\Services\McpQuotaService;
+use Core\Mcp\Services\McpWebhookDispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Mod\Api\Models\ApiKey;
-use Core\Mcp\Models\McpApiRequest;
-use Core\Mcp\Models\McpToolCall;
-use Core\Mcp\Services\McpWebhookDispatcher;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -121,7 +121,7 @@ class McpApiController extends Controller
         // Quota check
         if ($workspace) {
             $quotaCheck = app(McpQuotaService::class)->checkQuotaDetailed($workspace);
-            if (! $quotaCheck['allowed']) {
+            if (! ($quotaCheck['allowed'] ?? true)) {
                 return response()->json([
                     'error' => 'quota_exceeded',
                     'message' => $quotaCheck['reason'] ?? 'Monthly quota exceeded',
@@ -131,7 +131,7 @@ class McpApiController extends Controller
         }
 
         // Rate limiting
-        $rateKey = 'mcp_api_tool_call:' . ($workspace?->id ?: $request->ip());
+        $rateKey = 'mcp_api_tool_call:'.($workspace?->id ?: $request->ip());
         if (RateLimiter::tooManyAttempts($rateKey, 60)) {
             return response()->json([
                 'error' => 'too_many_requests',
