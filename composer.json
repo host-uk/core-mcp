@@ -5,8 +5,22 @@
     "license": "EUPL-1.2",
     "require": {
         "php": "^8.2",
-        "host-uk/core": "@dev"
+        "host-uk/core": "*"
     },
+    "require-dev": {
+        "laravel/pint": "^1.13",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "phpstan/phpstan": "^2.0",
+        "vimeo/psalm": "^6.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/host-uk/core-php"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Core\\Mcp\\": "src/Mcp/",
@@ -23,6 +37,6 @@
             "providers": []
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }

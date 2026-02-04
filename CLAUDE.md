@@ -82,6 +82,17 @@ class QueryDatabase extends Tool
 | `AuditLogService` | Tamper-evident logging |
 | `ToolDependencyService` | Validates tool dependencies at runtime |
 
+### Security Configuration
+
+MCP security is managed via `config/mcp.php` and environment variables.
+
+**Critical Settings:**
+- `MCP_DATABASE_CONNECTION`: Should always be a dedicated, read-only user.
+- `MCP_USE_WHITELIST`: Ensures queries match known safe patterns.
+- `MCP_AUDIT_LOG_CHANNEL`: Immutable trail for all query attempts.
+
+Boot-time validation in `src/Mcp/Boot.php` warns if security-critical settings are missing in production.
+
 ### Tool Configuration
 
 Tools are defined in `resources/mcp/servers/*.yaml`:

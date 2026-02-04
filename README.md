@@ -153,22 +153,37 @@ $quota->recordExecution($workspace, 'expensive_tool');
 
 ## Configuration
 
-```php
-// config/mcp.php
+The package can be configured via environment variables or by publishing the `config/mcp.php` file.
 
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MCP_DATABASE_CONNECTION` | Dedicated read-only DB connection | `null` (uses default) |
+| `MCP_USE_WHITELIST` | Enable/disable SQL whitelist | `true` |
+| `MCP_DEFAULT_TIER` | Default query tier for workspaces | `free` |
+| `MCP_AUDIT_LOG_CHANNEL` | Log channel for query audits | `mcp-queries` |
+| `MCP_ANALYTICS_ENABLED` | Enable tool usage tracking | `true` |
+| `MCP_CB_DEFAULT_THRESHOLD` | Circuit breaker failure threshold | `5` |
+
+### Manual Configuration
+
+Publish the config file:
+```bash
+php artisan vendor:publish --tag=mcp-config
+```
+
+Example `config/mcp.php`:
+```php
 return [
     'database' => [
-        'connection' => 'readonly', // Dedicated read-only connection
+        'connection' => env('MCP_DATABASE_CONNECTION'),
         'use_whitelist' => true,
-        'blocked_tables' => ['users', 'api_keys'],
+        'blocked_tables' => ['users', 'api_keys', 'sessions'],
     ],
     'analytics' => [
         'enabled' => true,
         'retention_days' => 90,
-    ],
-    'quota' => [
-        'enabled' => true,
-        'default_limit' => 1000, // Per workspace per day
     ],
 ];
 ```
